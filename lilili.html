@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>안심하고 소리지르자 릴리의 대나무숲</title>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    :root {
+      --bg-color: #e8f5e9;
+      --card-bg: #ffffff;
+      --primary: #2e7d32;
+      --primary-light: #a5d6a7;
+      --accent: #ffb74d;
+      --text: #1b5e20;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    /* 귀여운 대나무 배경 */
+    .bamboo-forest {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+
+    .bamboo-group {
+      display: flex;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .bamboo-stalk {
+      width: 32px;
+      height: 100%;
+      background: #81c784;
+      border-left: 4px solid #a5d6a7;
+      border-right: 4px solid #4caf50;
+      position: relative;
+      border-radius: 10px;
+    }
+
+    /* 대나무 귀여운 마디 */
+    .bamboo-stalk::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -4px;
+      right: -4px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 90px,
+        #388e3c 90px,
+        #388e3c 96px
+      );
+    }
+
+    /* 비밀 대나무 (우측 3번째) */
+    .bamboo-stalk.secret-target {
+      pointer-events: auto;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .bamboo-stalk.secret-target::after {
+      content: '🐼🍃';
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      animation: bounce 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes bounce {
+      0% { transform: translate(-50%, -50%) translateY(0); }
+      100% { transform: translate(-50%, -50%) translateY(-12px); }
+    }
+
+    /* 메인 카드 박스 */
+    .main-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 580px;
+      background: var(--card-bg);
+      border: 4px solid #a5d6a7;
+      border-radius: 35px;
+      padding: 40px 30px;
+      box-shadow: 0 15px 35px rgba(46, 125, 50, 0.15);
+      text-align: center;
+    }
+
+    .title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #2e7d32;
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+
+    .sub-title-banner {
+      display: inline-block;
+      background: #c8e6c9;
+      color: #1b5e20;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: #f1f8e9;
+      border: 3px solid #c8e6c9;
+      border-radius: 16px;
+      padding: 14px 18px;
+      color: #1b5e20;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+
+    .input-field:focus {
+      border-color: #81c784;
+      background: #ffffff;
+    }
+
+    textarea.input-field {
+      height: 180px;
+      resize: none;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: #4caf50;
+      color: #ffffff;
+      border: none;
+      border-radius: 22px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 0px #2e7d32;
+      transition: all 0.1s ease;
+    }
+
+    .submit-btn:hover {
+      background: #43a047;
+    }
+
+    .submit-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0px #2e7d32;
+    }
+
+    /* 토스트 알림 */
+    .toast {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #ffb74d;
+      color: #5d4037;
+      font-weight: 800;
+      padding: 14px 28px;
+      border-radius: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #fff;
+      border: 4px solid #81c784;
+      border-radius: 28px;
+      padding: 30px;
+      width: 90%;
+      max-width: 650px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .modal-card h2 {
+      color: #2e7d32;
+      font-size: 1.4rem;
+    }
+
+    .live-badge {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #81c784;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #4caf50;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .pw-input {
+      width: 100%;
+      padding: 14px;
+      background: #f1f8e9;
+      border: 2px solid #a5d6a7;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      text-align: center;
+      outline: none;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-pdf { background: #42a5f5; color: white; }
+    .btn-danger { background: #ef5350; color: white; }
+    .btn-close { background: #78909c; color: white; margin-left: auto; }
+
+    .story-list {
+      overflow-y: auto;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .story-item {
+      background: #f1f8e9;
+      border: 2px solid #c8e6c9;
+      padding: 16px;
+      border-radius: 18px;
+      position: relative;
+      text-align: left;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .story-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #558b2f;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding-right: 45px;
+    }
+
+    .story-nickname {
+      background: #c8e6c9;
+      color: #1b5e20;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+
+    .story-title-text {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #2e7d32;
+      margin-bottom: 6px;
+    }
+
+    .story-text {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #1b5e20;
+      font-size: 0.95rem;
+    }
+
+    .del-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: #ffcdd2;
+      border: none;
+      color: #c62828;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    /* PDF 인쇄 전용 CSS */
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        color: #000;
+        background: #fff;
+        padding: 20px;
+      }
+      .print-item {
+        border-bottom: 1px dashed #aaa;
+        padding: 12px 0;
+        page-break-inside: avoid;
+      }
+      .print-header { font-weight: bold; color: #333; margin-bottom: 4px; }
+      .print-title { font-size: 12pt; font-weight: bold; margin-bottom: 4px; }
+      .print-content { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 배경 대나무 일러스트 -->
+  <div class="bamboo-forest">
+    <div class="bamboo-group">
+      <div class="bamboo-stalk"></div>
+      <div class="bamboo-stalk"></div>
+      <div class="bamboo-stalk"></div>
+    </div>
+    <div class="bamboo-group">
+      <div class="bamboo-stalk"></div>
+      <div class="bamboo-stalk"></div>
+      <!-- 클릭 가능한 우측 3번째 판다 대나무 -->
+      <div class="bamboo-stalk secret-target" id="secretBamboo"></div>
+      <div class="bamboo-stalk"></div>
+    </div>
+  </div>
+
+  <!-- 메인 카드 -->
+  <main class="main-card">
+    <h1 class="title">안심하고 소리지르자 릴리의 대나무숲</h1>
+    <div class="sub-title-banner">📢 모든 고자질을 이곳에..</div>
+    
+    <form id="shoutForm">
+      <input type="text" id="storyTitle" class="input-field" placeholder="제목을 입력하세요 (필수) 📌" required>
+      <input type="text" id="storyNickname" class="input-field" placeholder="닉네임 (미입력 시 '익명'으로 남겨져요) 🤫">
+      <textarea id="storyText" class="input-field" placeholder="속에 있는 말을 시원하게 고자질해 보세요! 🎋" required></textarea>
+      <button type="submit" class="submit-btn">속마음 외치기! 💥</button>
+    </form>
+  </main>
+
+  <!-- 토스트 알림 -->
+  <div class="toast" id="toast">고자질이 대나무숲 속으로 속시원히 날아갔어요! 🎋</div>
+
+  <!-- 비밀번호 입력 모달 -->
+  <div class="modal-overlay" id="pwModal">
+    <div class="modal-card" style="max-width: 360px; text-align: center;">
+      <h2>🔒 관리자 인증</h2>
+      <input type="password" id="pwInput" class="pw-input" placeholder="비밀번호 입력" autocomplete="off">
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button class="btn btn-pdf" id="pwSubmitBtn">확인</button>
+        <button class="btn btn-close" onclick="closePwModal()">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 관리자 모달 -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>📜 속마음 고자질 목록</h2>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          실시간 연동 중
+        </div>
+      </div>
+      
+      <div class="admin-actions">
+        <button class="btn btn-pdf" onclick="exportToPDF()">📄 PDF 출력 / 저장</button>
+        <button class="btn btn-danger" onclick="clearAllStories()">전체 삭제</button>
+        <button class="btn btn-close" onclick="closeAdminModal()">닫기</button>
+      </div>
+
+      <div class="story-list" id="adminStoryList"></div>
+    </div>
+  </div>
+
+  <!-- PDF 출력 영역 -->
+  <div id="print-area" style="display: none;"></div>
+
+  <script>
+    const shoutForm = document.getElementById('shoutForm');
+    const storyTitle = document.getElementById('storyTitle');
+    const storyNickname = document.getElementById('storyNickname');
+    const storyText = document.getElementById('storyText');
+    const toast = document.getElementById('toast');
+    const secretBamboo = document.getElementById('secretBamboo');
+    
+    const pwModal = document.getElementById('pwModal');
+    const pwInput = document.getElementById('pwInput');
+    const pwSubmitBtn = document.getElementById('pwSubmitBtn');
+    
+    const adminModal = document.getElementById('adminModal');
+    const adminStoryList = document.getElementById('adminStoryList');
+
+    let liveInterval = null;
+    let lastDataString = '';
+
+    // 1. 고자질 작성 저장
+    shoutForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = storyTitle.value.trim();
+      const nickname = storyNickname.value.trim() || '익명';
+      const content = storyText.value.trim();
+      
+      if (!title || !content) return;
+
+      const stories = JSON.parse(localStorage.getItem('lily_bamboo_stories') || '[]');
+      const newStory = {
+        id: Date.now(),
+        title: title,
+        nickname: nickname,
+        content: content,
+        date: new Date().toLocaleString('ko-KR')
+      };
+
+      stories.unshift(newStory);
+      localStorage.setItem('lily_bamboo_stories', JSON.stringify(stories));
+
+      storyTitle.value = '';
+      storyNickname.value = '';
+      storyText.value = '';
+      showToast();
+
+      if (adminModal.classList.contains('active')) {
+        renderStories();
+      }
+    });
+
+    function showToast() {
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 2. 판다 대나무 클릭 시 비밀번호 창 오픈
+    secretBamboo.addEventListener('click', () => {
+      pwInput.value = '';
+      pwModal.classList.add('active');
+      pwInput.focus();
+    });
+
+    function closePwModal() {
+      pwModal.classList.remove('active');
+    }
+
+    // 3. 비밀번호 검증 (1009)
+    pwSubmitBtn.addEventListener('click', checkPassword);
+    pwInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    function checkPassword() {
+      if (pwInput.value === '1009') {
+        closePwModal();
+        openAdminModal();
+      } else {
+        alert('비밀번호가 틀렸습니다!');
+        pwInput.value = '';
+      }
+    }
+
+    // 4. 관리자 페이지 동작 및 1초 주기 실시간 감지
+    function openAdminModal() {
+      renderStories();
+      adminModal.classList.add('active');
+
+      liveInterval = setInterval(() => {
+        const currentData = localStorage.getItem('lily_bamboo_stories') || '[]';
+        if (currentData !== lastDataString) {
+          renderStories();
+        }
+      }, 1000);
+    }
+
+    function closeAdminModal() {
+      adminModal.classList.remove('active');
+      if (liveInterval) clearInterval(liveInterval);
+    }
+
+    function renderStories() {
+      const currentData = localStorage.getItem('lily_bamboo_stories') || '[]';
+      lastDataString = currentData;
+      const stories = JSON.parse(currentData);
+
+      adminStoryList.innerHTML = '';
+
+      if (stories.length === 0) {
+        adminStoryList.innerHTML = '<p style="text-align: center; color: #558b2f; padding: 20px;">접수된 고자질이 없습니다! 🍃</p>';
+        return;
+      }
+
+      stories.forEach(story => {
+        const item = document.createElement('div');
+        item.className = 'story-item';
+        item.innerHTML = `
+          <div class="story-meta">
+            <span>🗓️ ${story.date}</span>
+            <span class="story-nickname">👤 ${escapeHtml(story.nickname)}</span>
+          </div>
+          <div class="story-title-text">📌 ${escapeHtml(story.title)}</div>
+          <div class="story-text">${escapeHtml(story.content)}</div>
+          <button class="del-btn" onclick="deleteStory(${story.id})">삭제</button>
+        `;
+        adminStoryList.appendChild(item);
+      });
+    }
+
+    function deleteStory(id) {
+      if (!confirm('이 고자질 글을 삭제하시겠습니까?')) return;
+      let stories = JSON.parse(localStorage.getItem('lily_bamboo_stories') || '[]');
+      stories = stories.filter(s => s.id !== id);
+      localStorage.setItem('lily_bamboo_stories', JSON.stringify(stories));
+      renderStories();
+    }
+
+    function clearAllStories() {
+      if (!confirm('모든 사연을 삭제하시겠습니까?')) return;
+      localStorage.removeItem('lily_bamboo_stories');
+      renderStories();
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+    }
+
+    // 5. PDF 내보내기
+    function exportToPDF() {
+      const stories = JSON.parse(localStorage.getItem('lily_bamboo_stories') || '[]');
+      if (stories.length === 0) {
+        alert('출력할 사연이 없습니다.');
+        return;
+      }
+
+      const printArea = document.getElementById('print-area');
+      printArea.style.display = 'block';
+      printArea.innerHTML = '<h2>[릴리의 대나무숲] 속마음 고자질 전체 목록</h2><hr style="margin: 10px 0;">';
+
+      stories.forEach((story, idx) => {
+        printArea.innerHTML += `
+          <div class="print-item">
+            <div class="print-header">#${stories.length - idx} | 작성일시: ${story.date} | 작성자: ${escapeHtml(story.nickname)}</div>
+            <div class="print-title">제목: ${escapeHtml(story.title)}</div>
+            <div class="print-content">${escapeHtml(story.content)}</div>
+          </div>
+        `;
+      });
+
+      window.print();
+      printArea.style.display = 'none';
+      printArea.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
